@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Bét'Life</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eee;
+  text-align: center;
+}
+
+/* HEADER */
+h1 {
+  margin-top: 30px;
+  font-size: 48px;
+  text-decoration: underline red;
+}
+
+.subtitle {
+  margin-top: 30px;
+  font-size: 18px;
+}
+
+/* CONTENU */
+#content {
+  margin-top: 80px;
+}
+
+/* FOOTER */
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  border-top: 2px solid #4a90e2;
+  padding: 15px 0;
+  background: #eee;
+  display: flex;
+  justify-content: space-around;
+}
+
+.icon {
+  font-size: 40px;
+  cursor: pointer;
+}
+
+/* MODULE FLEX */
+.flex-box {
+  margin-top: 40px;
+}
+
+.time {
+  font-size: 2em;
+  margin: 10px 0;
+}
+
+button {
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Bét’Life</h1>
+<div class="subtitle">Bienvenue dans ton application de gestion personnelle au Béthel</div>
+
+<div id="content">
+  <!-- Contenu dynamique -->
+</div>
+
+<div class="footer">
+  <div class="icon" onclick="showHome()">🏠</div>
+  <div class="icon">🕒</div>
+  <div class="icon" onclick="showCar()">🚗</div>
+</div>
+
+<script>
+const API_URL = "TON_URL_SCRIPT";
+const MAX_TIME = 5 * 60 * 60;
+const STEP = 15 * 60;
+
+let elapsed = 0;
+
+/* ===== NAVIGATION ===== */
+
+function showHome() {
+  document.getElementById("content").innerHTML = "";
+}
+
+function showCar() {
+  document.getElementById("content").innerHTML = `
+    <div class="flex-box">
+      <h2>Gestion du temps de flex</h2>
+
+      <h3>⏱ Temps consommé</h3>
+      <div id="elapsed" class="time">00:00:00</div>
+
+      <h3>⏳ Temps restant</h3>
+      <div id="remaining" class="time">05:00:00</div>
+
+      <br>
+
+      <button onclick="addTime()">➕ +15 min</button>
+      <button onclick="removeTime()">➖ -15 min</button>
+    </div>
+  `;
+
+  loadData();
+}
+
+/* ===== LOGIQUE TEMPS ===== */
+
+function formatTime(sec) {
+  const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function updateDisplay() {
+  document.getElementById("elapsed").textContent = formatTime(elapsed);
+  document.getElementById("remaining").textContent = formatTime(Math.max(0, MAX_TIME - elapsed));
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    elapsed = parseInt(data.elapsed) || 0;
+  } catch(e) {
+    console.log("Erreur chargement :", e);
+  }
+  updateDisplay();
+}
+
+async function saveData() {
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ elapsed: elapsed })
+    });
+  } catch(e) {
+    console.log("Erreur sauvegarde :", e);
+  }
+}
+
+function addTime() {
+  elapsed = Math.min(MAX_TIME, elapsed + STEP);
+  updateDisplay();
+  saveData();
+}
+
+function removeTime() {
+  elapsed = Math.max(0, elapsed - STEP);
+  updateDisplay();
+  saveData();
+}
+</script>
+
+</body>
+</html>
