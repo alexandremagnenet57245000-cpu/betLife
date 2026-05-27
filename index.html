@@ -14,7 +14,6 @@ body {
   text-align: center;
 }
 
-/* HEADER */
 h1 {
   margin-top: 30px;
   font-size: 48px;
@@ -26,12 +25,10 @@ h1 {
   font-size: 18px;
 }
 
-/* CONTENU */
 #content {
   margin-top: 80px;
 }
 
-/* FOOTER */
 .footer {
   position: fixed;
   bottom: 0;
@@ -48,7 +45,6 @@ h1 {
   cursor: pointer;
 }
 
-/* MODULE FLEX */
 .flex-box {
   margin-top: 40px;
 }
@@ -72,9 +68,7 @@ button {
 <h1>Bét’Life</h1>
 <div class="subtitle">Bienvenue dans ton application de gestion personnelle au Béthel</div>
 
-<div id="content">
-  <!-- Contenu dynamique -->
-</div>
+<div id="content"></div>
 
 <div class="footer">
   <div class="icon" onclick="showHome()">🏠</div>
@@ -83,10 +77,8 @@ button {
 </div>
 
 <script>
-const API_URL = "TON_URL_SCRIPT";
 const MAX_TIME = 5 * 60 * 60;
 const STEP = 15 * 60;
-
 let elapsed = 0;
 
 /* ===== NAVIGATION ===== */
@@ -127,41 +119,34 @@ function formatTime(sec) {
 
 function updateDisplay() {
   document.getElementById("elapsed").textContent = formatTime(elapsed);
-  document.getElementById("remaining").textContent = formatTime(Math.max(0, MAX_TIME - elapsed));
+  document.getElementById("remaining").textContent =
+    formatTime(Math.max(0, MAX_TIME - elapsed));
 }
 
-async function loadData() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    elapsed = parseInt(data.elapsed) || 0;
-  } catch(e) {
-    console.log("Erreur chargement :", e);
-  }
+/* ✅ LOAD local */
+function loadData() {
+  const saved = localStorage.getItem("flexTime");
+  elapsed = parseInt(saved) || 0;
   updateDisplay();
 }
 
-async function saveData() {
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ elapsed: elapsed })
-    });
-  } catch(e) {
-    console.log("Erreur sauvegarde :", e);
-  }
+/* ✅ SAVE local */
+function saveData() {
+  localStorage.setItem("flexTime", elapsed);
 }
+
+/* ACTIONS */
 
 function addTime() {
   elapsed = Math.min(MAX_TIME, elapsed + STEP);
-  updateDisplay();
   saveData();
+  updateDisplay();
 }
 
 function removeTime() {
   elapsed = Math.max(0, elapsed - STEP);
-  updateDisplay();
   saveData();
+  updateDisplay();
 }
 </script>
 
