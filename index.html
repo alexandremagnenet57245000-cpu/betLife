@@ -3,61 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <title>Bét'Life</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #eee;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(180deg, #f4f6f9, #e9edf3);
   text-align: center;
 }
 
 h1 {
   margin-top: 30px;
-  font-size: 48px;
-  text-decoration: underline red;
+  font-size: 40px;
 }
 
 .subtitle {
-  margin-top: 30px;
-  font-size: 18px;
+  font-size: 16px;
+  color: #555;
 }
 
-#content {
-  margin-top: 80px;
+.card {
+  background: white;
+  margin: 40px auto;
+  padding: 25px;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
+
+.time {
+  font-size: 2.2em;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.buttons {
+  margin-top: 20px;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin: 5px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.add { background: #4CAF50; color: white; }
+.remove { background: #e74c3c; color: white; }
 
 .footer {
   position: fixed;
   bottom: 0;
   width: 100%;
-  border-top: 2px solid #4a90e2;
-  padding: 15px 0;
-  background: #eee;
+  background: white;
+  border-top: 1px solid #ddd;
   display: flex;
   justify-content: space-around;
+  padding: 10px 0;
 }
 
 .icon {
-  font-size: 40px;
-  cursor: pointer;
-}
-
-.flex-box {
-  margin-top: 40px;
-}
-
-.time {
-  font-size: 2em;
-  margin: 10px 0;
-}
-
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  font-size: 16px;
+  font-size: 26px;
   cursor: pointer;
 }
 </style>
@@ -65,50 +75,78 @@ button {
 
 <body>
 
-<h1>Bét’Life</h1>
-<div class="subtitle">Bienvenue dans ton application de gestion personnelle au Béthel</div>
+<h1>Bét'Life</h1>
+<div class="subtitle">Gestion personnelle au Béthel</div>
 
 <div id="content"></div>
 
 <div class="footer">
   <div class="icon" onclick="showHome()">🏠</div>
-  <div class="icon">🕒</div>
+  <div class="icon" onclick="showTime()">🕒</div>
   <div class="icon" onclick="showCar()">🚗</div>
 </div>
 
 <script>
+/* ===== VARIABLES ===== */
 const MAX_TIME = 5 * 60 * 60;
-const STEP = 15 * 60;
+const STEP_TIME = 15 * 60;
+const STEP_KM = 70;
+
 let elapsed = 0;
+let km = 0;
 
 /* ===== NAVIGATION ===== */
 
 function showHome() {
-  document.getElementById("content").innerHTML = "";
+  document.getElementById("content").innerHTML = `
+    <div class="card">
+      <h2>Bienvenue 👋</h2>
+      <p>Choisis une fonctionnalité en bas</p>
+    </div>
+  `;
+}
+
+function showTime() {
+  document.getElementById("content").innerHTML = `
+    <div class="card">
+      <h2>⏱ Temps de flex</h2>
+
+      <h3>Temps consommé</h3>
+      <div id="elapsed" class="time">00:00:00</div>
+
+      <h3>Temps restant</h3>
+      <div id="remaining" class="time">05:00:00</div>
+
+      <div class="buttons">
+        <button class="add" onclick="addTime()">+15 min</button>
+        <button class="remove" onclick="removeTime()">-15 min</button>
+      </div>
+    </div>
+  `;
+
+  loadTime();
 }
 
 function showCar() {
   document.getElementById("content").innerHTML = `
-    <div class="flex-box">
-      <h2>Gestion du temps de flex</h2>
+    <div class="card">
+      <h2>🚗 Kilométrage</h2>
 
-      <h3>⏱ Temps consommé</h3>
-      <div id="elapsed" class="time">00:00:00</div>
+      <p>Indique ici combien de kilomètres tu as fais</p>
 
-      <h3>⏳ Temps restant</h3>
-      <div id="remaining" class="time">05:00:00</div>
+      <div id="kmDisplay" class="time">0 km</div>
 
-      <br>
-
-      <button onclick="addTime()">➕ +15 min</button>
-      <button onclick="removeTime()">➖ -15 min</button>
+      <div class="buttons">
+        <button class="add" onclick="addKm()">+70 km</button>
+        <button class="remove" onclick="removeKm()">-70 km</button>
+      </div>
     </div>
   `;
 
-  loadData();
+  loadKm();
 }
 
-/* ===== LOGIQUE TEMPS ===== */
+/* ===== TEMPS ===== */
 
 function formatTime(sec) {
   const h = String(Math.floor(sec / 3600)).padStart(2, '0');
@@ -117,37 +155,62 @@ function formatTime(sec) {
   return `${h}:${m}:${s}`;
 }
 
-function updateDisplay() {
+function updateTime() {
   document.getElementById("elapsed").textContent = formatTime(elapsed);
   document.getElementById("remaining").textContent =
     formatTime(Math.max(0, MAX_TIME - elapsed));
 }
 
-/* ✅ LOAD local */
-function loadData() {
-  const saved = localStorage.getItem("flexTime");
-  elapsed = parseInt(saved) || 0;
-  updateDisplay();
+function loadTime() {
+  elapsed = parseInt(localStorage.getItem("flexTime")) || 0;
+  updateTime();
 }
 
-/* ✅ SAVE local */
-function saveData() {
+function saveTime() {
   localStorage.setItem("flexTime", elapsed);
 }
 
-/* ACTIONS */
-
 function addTime() {
-  elapsed = Math.min(MAX_TIME, elapsed + STEP);
-  saveData();
-  updateDisplay();
+  elapsed = Math.min(MAX_TIME, elapsed + STEP_TIME);
+  saveTime();
+  updateTime();
 }
 
 function removeTime() {
-  elapsed = Math.max(0, elapsed - STEP);
-  saveData();
-  updateDisplay();
+  elapsed = Math.max(0, elapsed - STEP_TIME);
+  saveTime();
+  updateTime();
 }
+
+/* ===== KM ===== */
+
+function updateKm() {
+  document.getElementById("kmDisplay").textContent = km + " km";
+}
+
+function loadKm() {
+  km = parseInt(localStorage.getItem("km")) || 0;
+  updateKm();
+}
+
+function saveKm() {
+  localStorage.setItem("km", km);
+}
+
+function addKm() {
+  km += STEP_KM;
+  saveKm();
+  updateKm();
+}
+
+function removeKm() {
+  km = Math.max(0, km - STEP_KM);
+  saveKm();
+  updateKm();
+}
+
+/* INIT */
+showHome();
 </script>
 
 </body>
